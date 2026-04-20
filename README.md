@@ -8,51 +8,52 @@
 ---
 
 ## 📖 Présentation du projet
-Cet atelier met en œuvre un **mini-PRA** (Plan de Reprise d'Activité) sur **Kubernetes** en déployant une **application Flask** avec une **base SQLite** stockée sur un **volume persistant (PVC pra-data)** et des **sauvegardes automatiques** réalisées chaque minute vers un second volume (**PVC pra-backup**) via un **CronJob**. 
+Cet atelier met en œuvre un **mini-PRA** (Plan de Reprise d'Activité) sur **Kubernetes**. Il simule la perte d'un volume de données et sa restauration via un système de sauvegarde automatisé par **CronJob**.
 
 ---
 
-## 🌐 État des Routes et Accès Application
+## 🌐 Accès à l'Application (Liens Directs)
+*Cliquez sur les liens ci-dessous pour tester l'application (Port 8080 public) :*
 
-| Route | Résultat Obtenu | Statut |
+* 🏠 **Accueil** : https://psychic-funicular-4j9jqrxw547jc799v-8080.app.github.dev/
+* 🏥 **Santé** : https://psychic-funicular-4j9jqrxw547jc799v-8080.app.github.dev/health
+* ➕ **Ajouter** : https://psychic-funicular-4j9jqrxw547jc799v-8080.app.github.dev/add?message=Test_EPSI
+* 🔢 **Compteur** : https://psychic-funicular-4j9jqrxw547jc799v-8080.app.github.dev/count
+* 📋 **Consultation** : https://psychic-funicular-4j9jqrxw547jc799v-8080.app.github.dev/consultation
+
+---
+
+## ✅ État de Validation des Services
+
+| Service | Fonctionnalité | État |
 | :--- | :--- | :--- |
-| <a href="https://psychic-funicular-4j9jqrxw547jc799v-8080.app.github.dev/" target="_blank">🏠 Accueil</a> | Affichage de `{"status":"Bonjour tout le monde !"}` | OK ✅ |
-| <a href="https://psychic-funicular-4j9jqrxw547jc799v-8080.app.github.dev/health" target="_blank">🏥 /health</a> | Système opérationnel (health check OK) | OK ✅ |
-| <a href="https://psychic-funicular-4j9jqrxw547jc799v-8080.app.github.dev/add?message=Message_Initial" target="_blank">➕ /add?message=...</a> | Enregistrement réussi (Message_Initial) | OK ✅ |
-| <a href="https://psychic-funicular-4j9jqrxw547jc799v-8080.app.github.dev/count" target="_blank">🔢 /count</a> | Compteur incrémenté à 1 | OK ✅ |
-| <a href="https://psychic-funicular-4j9jqrxw547jc799v-8080.app.github.dev/consultation" target="_blank">📋 /consultation</a> | Affichage du JSON avec l'ID 1 et le timestamp | OK ✅ |
+| API Flask | Réponse JSON /status | Opérationnel ✅ |
+| Base de données | SQLite Persistante | Opérationnel ✅ |
+| Sauvegarde | CronJob (1 min) | Opérationnel ✅ |
+| Restauration | Job Ansible/K8s | Testé et Validé ✅ |
 
 ---
 
 ## 🚀 Expertise Théorique (Séquence 5)
 
 ### Q1 : Quels sont les composants dont la perte entraîne une perte de données ?
-La perte de données définitive ne survient que si l'on perd la **chaîne de stockage complète** :
-* **Le PVC `pra-data`** : Contient la base active. Sa perte efface les données "live".
-* **Le PVC `pra-backup`** : Contient les sauvegardes. Si les deux sont perdus, la restauration est impossible.
-* **Note :** Le Pod Flask est **stateless**, sa perte n'impacte pas les données.
+La perte est définitive si l'on perd le **PVC pra-data** (données live) ET le **PVC pra-backup** (sauvegardes). Le Pod Flask est **stateless**, sa perte n'impacte pas les données.
 
 ### Q2 : Pourquoi n'avons-nous pas perdu les données lors de la suppression de `pra-data` ?
-Grâce à la **redondance asynchrone** :
-1. Un **CronJob** copiait la base chaque minute vers `pra-backup`.
-2. Un **Job de restauration** a permis de recharger ces données dans le nouveau volume de production.
+Grâce à la **redondance asynchrone** : le CronJob a sauvegardé la base sur un volume indépendant (`pra-backup`) avant la suppression.
 
 ### Q3 : Quels sont les RTO et RPO de cette solution ?
-* **RPO (Recovery Point Objective)** : **1 Minute** (fréquence du backup).
-* **RTO (Recovery Time Objective)** : **~2 à 5 Minutes** (intervention humaine).
+* **RPO** : 1 Minute.
+* **RTO** : ~2 à 5 Minutes.
 
 ### Q4 : Pourquoi cette solution n'est pas adaptée à une production réelle ?
-* **SPOF (Point unique de défaillance)** : Tout est sur le même serveur physique.
-* **Moteur SQLite** : Pas de gestion de haute disponibilité native.
-* **Restauration Manuelle** : Trop lente pour des services critiques.
+À cause du **SPOF** (Single Point of Failure) : les sauvegardes sont sur le même cluster. Il manque également un monitoring (alerting) et un stockage déporté.
 
-### Q5 : Proposez une architecture plus robuste
-* **Backup Offsite** : Exportation vers **AWS S3 / Azure Blob**.
-* **Base de Données Managée (PaaS)** : Amazon RDS Multi-AZ.
-* **Observabilité** : Monitoring **Prometheus/Grafana** pour les alertes.
+### Q5 : Architecture cible plus robuste
+Utilisation d'un stockage objet distant (**S3**) et d'une base de données managée (**PaaS**) pour garantir une haute disponibilité géographique.
 
 ---
 
 ## 🛠️ Ateliers de Validation (Séquence 6)
-* **Atelier 1 (Route /status)** : Implémentation réussie du JSON d'état des backups.
-* **Atelier 2 (Restauration sélective)** : Procédure validée via le fichier `50-job-restore.yaml`.
+* **Atelier 1** : Route `/status` ajoutée (JSON).
+* **Atelier 2** : Restauration granulaire validée.
