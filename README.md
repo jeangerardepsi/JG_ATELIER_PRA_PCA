@@ -13,32 +13,31 @@ Cet atelier met en œuvre un **mini-PRA** (Plan de Reprise d'Activité) sur Kube
 ---
 
 ## 🌐 Accès et Routes de l'Application
-* 🏠 [**Accueil**](https://psychic-funicular-4j9jqrxw547jc799v-8080.app.github.dev/) : *"Bonjour tout le monde !"*.
-* 🏥 [**Health Check**](https://psychic-funicular-4j9jqrxw547jc799v-8080.app.github.dev/health) : État de santé.
-* ➕ [**Ajouter un message**](https://psychic-funicular-4j9jqrxw547jc799v-8080.app.github.dev/add?message=test).
-* 🔢 [**Compteur**](https://psychic-funicular-4j9jqrxw547jc799v-8080.app.github.dev/count).
-* 📋 [**Consultation**](https://psychic-funicular-4j9jqrxw547jc799v-8080.app.github.dev/consultation).
+* 🏠 [**Accueil**](https://psychic-funicular-4j9jqrxw547jc799v-8080.app.github.dev/)
+* 📋 [**Consultation**](https://psychic-funicular-4j9jqrxw547jc799v-8080.app.github.dev/consultation)
+* ➕ [**Ajouter un message**](https://psychic-funicular-4j9jqrxw547jc799v-8080.app.github.dev/add?message=test)
+* 🔢 [**Compteur**](https://psychic-funicular-4j9jqrxw547jc799v-8080.app.github.dev/count)
 
 ---
 
 ## 🚀 Séquence 5 : Exercices de Validation
 
 ### 📂 Exercice 1 | Perte de données
-La perte de données survient si l'on perd le **PVC pra-data** et le **PVC pra-backup**.
+La perte de données survient si l'on perd le **PVC pra-data** et le **PVC pra-backup**. Le Pod lui-même est stateless.
 
-### 🔄 Exercice 2 | Pourquoi pas de perte ?
-Les données sont répliquées chaque minute par un **CronJob** vers un volume de secours.
+### 🔄 Exercice 2 | Mécanisme de Résilience
+Nous n'avons pas perdu les données grâce au **CronJob** qui réplique la base chaque minute vers un volume de secours indépendant.
 
-### ⏱️ Exercice 3 | KPI
+### ⏱️ Exercice 3 | Métriques (KPI)
 * **RPO** : 1 Minute.
 * **RTO** : ~2 à 5 Minutes.
 
 ### 🏗️ Exercice 4 & 5 | Évolutions
-**Limites :** Stockage local. **Solution :** Cloud S3, DB managée et Monitoring.
+**Limites :** Stockage local (SPOF).  
+**Solution cible :** Backup déporté (S3) et base de données managée.
 
 ---
 
 ## 🛠️ Séquence 6 : Ateliers Pratiques
-1. **Atelier 1** : Route /status ajoutée.
-2. **Atelier 2** : Restauration sélective via modification du job YAML.
-
+1. **Atelier 1** : Route `/status` opérationnelle.
+2. **Atelier 2** : Restauration sélective via modification du fichier `50-job-restore.yaml`.
